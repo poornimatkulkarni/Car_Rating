@@ -14,7 +14,7 @@ import numpy as np
 import jinja2
 
 
-model = pickle.load(open(r"model_new.pk1",'rb'))
+model = pickle.load(open(r"carmodel.pk1",'rb'))
 
 app = Flask(__name__)
 
