@@ -44,13 +44,14 @@ def predict():
     input_query = np.array([[inp1,inp2,inp3,inp4,inp5,inp6,inp7,inp8,inp9,inp10,inp11,inp12]])
 
     result = model.predict(input_query[[0]])
+    print(result)
 
     if result <=5:
         return jsonify("Not A Nature Friedly Car ")
     else:
         return jsonify("Nature Friendly Car")
 
-    return jsonify(str(result))
+    #return jsonify(str(result))
 
 
 if __name__ == '__main__':
