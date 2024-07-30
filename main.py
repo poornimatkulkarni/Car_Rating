@@ -21,7 +21,9 @@ from sklearn.svm import SVC
 import flask,requests
 import jsonify
 from flask import Flask
-#from keras.utils import to_categorical
+import joblib
+from sklearn import svm
+#from keras.utils import to_categoricalin
 
 # Data Reading
 df = pd.read_csv(r"C:\Users\Poornima\Desktop\MY2022 Fuel Consumption Ratings.csv")
@@ -110,20 +112,6 @@ df.drop(['Make','Model'],axis=1, inplace = True)
 X = df.iloc[:,:-1].values  # all columnsexcept last co2 rating
 Y = df["Co2_Rating"]
 
-g = sb.countplot(df['Co2_Rating'])
-plt.show()
-df['Co2_Rating'].value_counts()
-
-#When dataset has different stad scaler it is important to standardize
-#and put everything on the same sacle
-sc = StandardScaler()
-scaled = sc.fit_transform(X)
-print(scaled)
-
-#setting values of scaled values of X to X again
-X = pd.DataFrame(scaled)
-print(X)
-
 #splitting X and Y values into X train,X_test,Y_test and y train with test size 20% and training size 80% of data set
 X_train,X_test,Y_train,Y_test = train_test_split(X ,Y , test_size=0.2, random_state= 0)
 
@@ -134,122 +122,21 @@ print("lenth of Y train",len(Y_train))
 print("lenth of Y Test",len(Y_test))
 
 #Model Building
-# 1 Logistic Regression
-classifier1 = LogisticRegression(random_state=0,solver='lbfgs',max_iter=1000)
-classifier1.fit(X_train,Y_train)
+# 1 SVM
+classifier1 = svm.SVC()
+classifier1.fit(X,Y)
 
-print("Logistic Regression Train score is",classifier1.score(X_train,Y_train))
-print("Logistic Regression Test score is",classifier1.score(X_test,Y_test))
+#s = pickle.dumps(classifier1)
+#clf2 = pickle.loads(s)
+#print(clf2.predict([[2022,2,4,19,7,8,34,400,5,6,3,12]]))
 
-Y_Pred_lr = classifier1.predict(X_test)
+joblib.dump(classifier1, 'filename.pkl') 
 
-# Confusion Matrix using  logistic regression
-cm_lr = confusion_matrix(Y_test,Y_Pred_lr)
-print(cm_lr)
-print("Accuracy SCore Of Logistic Regression Is",accuracy_score(Y_test,Y_Pred_lr))
 
-sb.heatmap(cm_lr/np.sum(cm_lr),annot=True,fmt='0.2%',cmap='Reds')
-plt.xlabel("Predicted values")
-plt.ylabel("Actual Values")
-plt.title("Confusion Matrix")
 
-# SVM(Support Vector Machine)
-from sklearn.svm import SVC
-classifier2 = SVC(kernel='rbf',random_state=0)
-classifier2.fit(X_train,Y_train)
 
-print("SVM train score",classifier2.score(X_train,Y_train))
-print("SVM test score",classifier2.score(X_test,Y_test))
-
-Y_Pred = classifier2.predict(X_test)
-
-# Making Confusion Matrix for SVM
-cm = confusion_matrix(Y_test,Y_Pred)
-print(cm)
-print("Accuracy score using SVM",accuracy_score(Y_test,Y_Pred))
-
-#To view confusion matrix in Percentage format
-sb.heatmap(cm/np.sum(cm),annot=True,fmt='0.2%',cmap='Blues')
-plt.xlabel("Predicted values")
-plt.ylabel("Actual Values")
-plt.title("Confusion Matrix")
-
-#Generating Classifier Report
-print("REPORT FOR LOGISTIC REGRESSION")
-
-print(classification_report(Y_test,Y_Pred_lr,labels=np.unique(Y_Pred_lr)))
-
-print("REPORT FOR SVM")
-print(classification_report(Y_test,Y_Pred,labels=np.unique(Y_Pred_lr)))
-
-print("Recall of LR",recall_score(Y_test,Y_Pred_lr,average='weighted'))
-print("Precision of LR",precision_score(Y_test,Y_Pred_lr,average='weighted',labels=np.unique(Y_Pred_lr)))
-print("F1 Score of LR",f1_score(Y_test,Y_Pred_lr,average='weighted'))
-rmse_lr = sqrt(mean_squared_error(Y_test, Y_Pred_lr))
-error_lr = mean_absolute_error(Y_test,Y_Pred_lr)
-print("Root mean sqaured error LR",rmse_lr)
-print("Mean Absolute error LR",error_lr)
-
-print("Recall of SVM",recall_score(Y_test,Y_Pred,average='weighted',labels=np.unique(Y_Pred)))
-print("Precision of SVM",precision_score(Y_test,Y_Pred,average='weighted',labels=np.unique(Y_Pred)))
-print("F1 Score of SVM",f1_score(Y_test,Y_Pred,average='weighted'   ))
-rmse_svm = sqrt(mean_squared_error(Y_test, Y_Pred))
-error_svm =  mean_absolute_error(Y_test,Y_Pred)
-print("Root mean sqaured error SVM",rmse_svm)
-print("Mean Absolute error SVM",error_svm)
-
-"""
-Observation
-1 Support Vector Machine Classifier and logistic Regression both are are giving 89% accuracy
-
-2 Support Vector Machine Classifier is used for building model
-3 It's Supervised Learning Algorithm
-4 Linear Kernel is used to build the model
-5 Accuracy of 89% achieved using linear SVM
-"""
-
-## Building Predictive System
-input1 = int(input("Enter year: "))
-input2 = float(input("Enter engine size"))
-input3 = int(input("Enter number of cylinders: "))
-input4 = float(input("Enter fuel consumption in city: "))
-input5 = float(input("Enter fuel consumption on highway: "))
-input6 = float(input("Enter fuel consumption in combination: "))
-input7 = float(input("Enter fuel consumption in mg: "))
-input8 = int(input("Enter co2 emission: "))
-input9 = int(input("Enter smog rating: "))
-input10 = int(input("Enter transmission: "))
-input11 = int(input("Enter fuel type: "))
-input12 = int(input("Enter vehicle class: "))
-#input_data = (2022,2,4,9.1,7,8.2,34,190,5,6,3,12)
-
-input_data = (input1,input2,input3,input4,input5,input6,input7,input8,input9,input10,input11,input12)
-# change input data into array
-input_data_array = np.asarray(input_data)
-
-#reshape array
-input_data_reshaped = input_data_array.reshape(1,-1)
-
-#standardizing input array
-std_data = sc.transform(input_data_reshaped)
-print(std_data)
-
-prediction = classifier2.predict(std_data)
-#prediction1 = classifier1.predict(std_data)
-if prediction <=5 :
-    pr = "This Car Can Harm Nature"
-else:
-    pr = "This Car Can Be A Good Friend Of Nature"
-
-print(prediction,"{}".format(pr))
 
 
 #print(model.predict([[2022,2,4,12.4,8.9,10.8,26,252,7,12,3,8]]))
 
 
-
-#Dumping model into pickle format
-db = open('archit_car.pkl','wb')
-pickle.dump(classifier2,db)
-db.close()
-model_car = pickle.load(open('archit_car.pkl','rb'))
